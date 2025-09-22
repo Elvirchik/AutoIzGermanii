@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}Autogerm{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<header class="bg-light p-3 mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+        <h1>Autogerm</h1>
+        <div>
+            {% if user.is_authenticated %}
+                <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Выход</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-primary">Вход</a>
+                <a href="{% url 'register' %}" class="btn btn-secondary ms-2">Регистрация</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
+
+<main class="container">
+    {% block content %}
+    {% endblock %}
+</main>
+
+<footer class="bg-light text-center p-3 mt-4">
+    <div class="container">
+        &copy; 2025 Autogerm
+    </div>
+</footer>
+
+</body>
+</html>
