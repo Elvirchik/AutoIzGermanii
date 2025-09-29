@@ -1,0 +1,19 @@
+{% extends 'main/base.html' %}
+{% block title %}{{ car.configuration }}{% endblock %}
+{% block content %}
+<h2>{{ car.configuration }}</h2>
+<img src="{{ car.photo.url }}" alt="Фото" width="400">
+<ul>
+    <li>Цена: {{ car.price }} руб.</li>
+    <li>Лошадиные силы: {{ car.power }}</li>
+    <li>Пробег: {{ car.mileage }} км</li>
+    <li>Коробка: {{ car.get_transmission_display }}</li>
+    <li>Цвет: {{ car.color }}</li>
+    <li>Привод: {{ car.get_drive_display }}</li>
+    <li>Тип топлива: {{ car.get_fuel_type_display }}</li>
+    <li>Описание: {{ car.configuration_desc }}</li>
+</ul>
+<form action="{% url 'add_to_cart' car.id %}" method="post">{% csrf_token %}
+    <button type="submit">Добавить в заказ</button>
+</form>
+{% endblock %}

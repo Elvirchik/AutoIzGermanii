@@ -1,0 +1,86 @@
+{% extends 'main/base.html' %}
+{% block title %}Админка{% endblock %}
+{% block content %}
+<h2>Администрирование</h2>
+
+<h3>Пользователи</h3>
+<table border="1">
+    <tr>
+        <th>ID</th><th>Имя</th><th>Фамилия</th><th>Отчество</th><th>Телефон</th><th>Адрес</th><th>Действия</th>
+    </tr>
+    {% for u in users %}
+    <tr>
+        <td>{{ u.id }}</td>
+        <td>{{ u.first_name }}</td>
+        <td>{{ u.last_name }}</td>
+        <td>{{ u.middle_name }}</td>
+        <td>{{ u.phone }}</td>
+        <td>{{ u.address }}</td>
+        <td>
+            <a href="{% url 'admin_user_edit' u.id %}">Редактировать</a> |
+            <a href="{% url 'admin_user_delete' u.id %}">Удалить</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h3>Каталог авто</h3>
+<a href="{% url 'admin_car_add' %}">Добавить автомобиль</a>
+<table border="1">
+    <tr>
+        <th>ID</th><th>Название</th><th>Цена</th><th>Л.С.</th><th>Пробег</th><th>Коробка</th><th>Действия</th>
+    </tr>
+    {% for c in cars %}
+    <tr>
+        <td>{{ c.id }}</td>
+        <td>{{ c.configuration }}</td>
+        <td>{{ c.price }}</td>
+        <td>{{ c.power }}</td>
+        <td>{{ c.mileage }}</td>
+        <td>{{ c.get_transmission_display }}</td>
+        <td>
+            <a href="{% url 'admin_car_edit' c.id %}">Редактировать</a> |
+            <a href="{% url 'admin_car_delete' c.id %}">Удалить</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h3>Заказы</h3>
+<table border="1">
+    <tr>
+        <th>ID</th><th>Пользователь</th><th>Телефон</th><th>Адрес</th><th>Статус</th><th>Автомобили</th><th>Изменить статус</th><th>Действия</th>
+    </tr>
+    {% for order in orders %}
+    <tr>
+        <td>{{ order.id }}</td>
+        <td>{{ order.user.first_name }} {{ order.user.last_name }} {{ order.user.middle_name }}</td>
+        <td>{{ order.user.phone }}</td>
+        <td>{{ order.address }}</td>
+        <td>{{ order.get_status_display }}</td>
+        <td>
+            <ul>
+            {% for item in order.items.all %}
+                <li>{{ item.car.configuration }} - {{ item.quantity }}</li>
+            {% endfor %}
+            </ul>
+        </td>
+        <td>
+            <form method="post" action="{% url 'change_order_status' order.id %}">
+                {% csrf_token %}
+                <select name="status">
+                    {% for key, label in order.STATUS_CHOICES %}
+                    <option value="{{ key }}" {% if order.status == key %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Сохранить</button>
+            </form>
+        </td>
+        <td>
+            <a href="{% url 'admin_order_edit' order.id %}">Редактировать</a> |
+            <a href="{% url 'admin_order_delete' order.id %}">Удалить</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

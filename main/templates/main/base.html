@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}AutoGerm{% endblock %}</title>
+</head>
+<body>
+<header>
+    <nav>
+        <a href="{% url 'home' %}">Главная</a> |
+        <a href="{% url 'catalog' %}">Каталог</a> |
+        {% if user.is_authenticated %}
+            {% if user.is_superuser %}
+                <a href="{% url 'admin_page' %}">Админка</a> |
+            {% endif %}
+            <a href="{% url 'cart' %}">Корзина</a> |
+            <a href="{% url 'profile' %}">{{ user.first_name }}</a> |
+            <a href="{% url 'logout' %}">Выход</a>
+        {% else %}
+            <a href="{% url 'cart' %}">Корзина</a> |
+            <a href="{% url 'login' %}">Вход</a> |
+            <a href="{% url 'register' %}">Регистрация</a>
+        {% endif %}
+    </nav>
+</header>
+
+<main>
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% block content %}
+    {% endblock %}
+</main>
+
+<footer>
+    <hr>
+    <p>© 2025 AutoGerm</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{% extends 'main/base.html' %}
+{% block title %}Форма редактирования{% endblock %}
+{% block content %}
+<h2>Редактирование</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Сохранить</button>
+    <a href="{% url 'admin_page' %}">Отмена</a>
+</form>
+{% endblock %}

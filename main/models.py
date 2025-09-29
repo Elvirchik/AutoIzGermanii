@@ -1,120 +1,118 @@
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
-from django.contrib.auth.models import AbstractUser, Group, Permission
-from django.utils.translation import gettext_lazy as _
+
+class UserManager(BaseUserManager):
+    use_in_migrations = True
+
+    def _create_user(self, phone, password, **extra_fields):
+        if not phone:
+            raise ValueError('The given phone must be set')
+        phone = self.model.normalize_username(phone)
+        user = self.model(phone=phone, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, phone, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        return self._create_user(phone, password, **extra_fields)
+
+    def create_superuser(self, phone, password, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self._create_user(phone, password, **extra_fields)
 
 
-class Role(models.Model):
-    name = models.CharField(max_length=50, verbose_name="Название роли")
+class User(AbstractUser):
+    middle_name = models.CharField("Отчество", max_length=30, blank=True)
+    phone = models.CharField("Номер телефона", max_length=20, unique=True)
+    address = models.TextField("Адрес доставки", blank=True)
+    username = None
 
-    def __str__(self):
-        return self.name
+    USERNAME_FIELD = 'phone'
+    REQUIRED_FIELDS = []
 
-    class Meta:
-        verbose_name = "Роль"
-        verbose_name_plural = "Роли"
-
-
-class CustomUser(AbstractUser):
-    last_name = models.CharField(max_length=150, verbose_name="Фамилия")
-    first_name = models.CharField(max_length=150, verbose_name="Имя")
-    middle_name = models.CharField(max_length=150, verbose_name="Отчество", blank=True)
-    phone_number = models.CharField(max_length=20, verbose_name="Номер телефона")
-    email = models.EmailField(unique=True, verbose_name="Почта")
-    role = models.ForeignKey(Role, on_delete=models.PROTECT, verbose_name="Роль")
-    address = models.TextField(verbose_name="Адрес проживания")
-
-    groups = models.ManyToManyField(
-        Group,
-        related_name="customuser_set",
-        related_query_name="customuser",
-        blank=True,
-        help_text=_(
-            "The groups this user belongs to. A user will get all permissions "
-            "granted to each of their groups."
-        ),
-        verbose_name=_("groups"),
-    )
-    user_permissions = models.ManyToManyField(
-        Permission,
-        related_name="customuser_set",
-        related_query_name="customuser",
-        blank=True,
-        help_text=_("Specific permissions for this user."),
-        verbose_name=_("user permissions"),
-    )
-
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email', 'last_name', 'first_name', 'role']
+    objects = UserManager()
 
     def __str__(self):
-        return f"{self.last_name} {self.first_name} ({self.username})"
-
-    class Meta:
-        verbose_name = "Пользователь"
-        verbose_name_plural = "Пользователи"
+        return f"{self.first_name} {self.last_name} ({self.phone})"
 
 
-class CarMake(models.Model):
-    name = models.CharField(max_length=100, verbose_name="Название марки")
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = "Марка авто"
-        verbose_name_plural = "Марки авто"
-
-
+# Автомобиль
 class Car(models.Model):
-    make = models.ForeignKey(CarMake, on_delete=models.CASCADE, verbose_name="Марка авто")
-    model_name = models.CharField(max_length=100, verbose_name="Модель")
-    trim = models.CharField(max_length=100, verbose_name="Комплектация")
-    price = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Цена")
-    mileage = models.PositiveIntegerField(verbose_name="Пробег")
-    horsepower = models.PositiveIntegerField(verbose_name="Лошадиные силы")
-    color = models.CharField(max_length=50, verbose_name="Цвет")
-    transmission = models.CharField(max_length=50, verbose_name="Коробка передач")
-    gears = models.PositiveIntegerField(verbose_name="Количество ступеней")
-    description = models.TextField(verbose_name="Описание", blank=True)
-    drivetrain = models.CharField(max_length=50, verbose_name="Привод")
+    TRANSMISSION_CHOICES = [
+        ('auto', 'Автомат'),
+        ('manual', 'Механика'),
+        ('robot', 'Робот'),
+    ]
+
+    FUEL_CHOICES = [
+        ('petrol', 'Бензин'),
+        ('diesel', 'Дизель'),
+        ('electric', 'Электро'),
+        ('hybrid', 'Гибрид'),
+    ]
+
+    DRIVE_CHOICES = [
+        ('rear', 'Задний'),
+        ('front', 'Передний'),
+        ('full', 'Полный'),
+    ]
+
+    photo = models.ImageField("Фото", upload_to='cars/')
+    price = models.DecimalField("Стоимость", max_digits=10, decimal_places=2)
+    power = models.PositiveIntegerField("Лошадиные силы")
+    mileage = models.PositiveIntegerField("Пробег (км)")
+    transmission = models.CharField("Коробка передач", max_length=10, choices=TRANSMISSION_CHOICES)
+    color = models.CharField("Цвет", max_length=50)
+    drive = models.CharField("Привод", max_length=10, choices=DRIVE_CHOICES)
+    fuel_type = models.CharField("Тип топлива", max_length=10, choices=FUEL_CHOICES)
+    configuration = models.CharField("Название", max_length=100)
+    configuration_desc = models.TextField("Описание", blank=True)
 
     def __str__(self):
-        return f"{self.make.name} {self.model_name} {self.trim}"
+        return f"{self.configuration} - {self.price} руб."
+
+
+# Корзина с количеством машин (Связь пользователя и автомобиля)
+class CartItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cart_items')
+    car = models.ForeignKey(Car, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
 
     class Meta:
-        verbose_name = "Авто"
-        verbose_name_plural = "Автомобили"
+        unique_together = ('user', 'car')
 
 
+# Заказ автомобиля
 class Order(models.Model):
-    STATUS_CHOICES = (
-        ('new', 'Новый'),
-        ('processing', 'Обработка'),
+    STATUS_CHOICES = [
+        ('created', 'Создан'),
+        ('processed', 'Обработан'),
+        ('in_process', 'Авто в процессе'),
+        ('in_delivery', 'Авто в доставке'),
+        ('delivered', 'Доставлен'),
         ('completed', 'Завершён'),
-        ('cancelled', 'Отменён'),
-    )
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, verbose_name="Пользователь")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new', verbose_name="Статус заказа")
-    total_amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Итоговая сумма")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата оформления заказа")
-    completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата завершения заказа")
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='created')
+    address = models.TextField("Адрес доставки")
 
     def __str__(self):
-        return f"Заказ #{self.id} от {self.user}"
-
-    class Meta:
-        verbose_name = "Заказ"
-        verbose_name_plural = "Заказы"
+        return f"Заказ {self.id} - {self.user.first_name} {self.user.last_name}"
 
 
+# Позиции с количеством в заказе
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items', verbose_name="Заказ")
-    car = models.ForeignKey(Car, on_delete=models.PROTECT, verbose_name="Авто")
-    quantity = models.PositiveIntegerField(default=1, verbose_name="Количество")
-
-    def __str__(self):
-        return f"{self.car} в заказе #{self.order.id}"
-
-    class Meta:
-        verbose_name = "Состав заказа"
-        verbose_name_plural = "Состав заказов"
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    car = models.ForeignKey(Car, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)

@@ -1,0 +1,32 @@
+{% extends 'main/base.html' %}
+{% block title %}Профиль{% endblock %}
+{% block content %}
+<h2>Профиль</h2>
+<form method="post">{% csrf_token %}
+    <p>Имя: {{ user.first_name }}</p>
+    <p>Фамилия: {{ user.last_name }}</p>
+    <p>Отчество: {{ user.middle_name }}</p>
+    <p>Телефон: {{ user.phone }}</p>
+    <p>Email: {{ user.email }}</p>
+    <p>
+        Адрес доставки:<br>
+        <textarea name="address" rows="4" cols="40">{{ user.address }}</textarea>
+    </p>
+    <button type="submit">Сохранить адрес</button>
+</form>
+
+<h3>Заказы</h3>
+<ul>
+    {% for order in orders %}
+    <li>Заказ №{{ order.id }} - Статус: {{ order.get_status_display }} - Дата: {{ order.created_at }}
+        <ul>
+            {% for item in order.items.all %}
+                <li>{{ item.car.configuration }} - Кол-во: {{ item.quantity }}</li>
+            {% endfor %}
+        </ul>
+    </li>
+    {% empty %}
+    <li>Заказы отсутствуют</li>
+    {% endfor %}
+</ul>
+{% endblock %}

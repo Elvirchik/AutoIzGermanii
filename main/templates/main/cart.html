@@ -1,0 +1,20 @@
+{% extends 'main/base.html' %}
+{% block title %}Корзина{% endblock %}
+{% block content %}
+<h2>Корзина</h2>
+{% if items %}
+    <ul>
+        {% for item in items %}
+            <li>
+                {{ item.car.configuration }} - Кол-во: {{ item.quantity }} - Цена за шт: {{ item.car.price }} руб.
+            </li>
+        {% endfor %}
+    </ul>
+    <p>Общая стоимость: {{ total_price }} руб.</p>
+    <form action="{% url 'place_order' %}" method="post">{% csrf_token %}
+        <button type="submit">Заказать</button>
+    </form>
+{% else %}
+    <p>Корзина пуста.</p>
+{% endif %}
+{% endblock %}

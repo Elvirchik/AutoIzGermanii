@@ -1,0 +1,25 @@
+{% extends 'main/base.html' %}
+{% block title %}Каталог{% endblock %}
+{% block content %}
+<h2>Каталог автомобилей</h2>
+<div>
+    {% for car in cars %}
+        <div style="border:1px solid #ccc; margin-bottom:10px; padding:10px;">
+            <a href="{% url 'car_detail' car.id %}">
+                <img src="{{ car.photo.url }}" alt="Фото" width="200">
+                <h3>{{ car.configuration }}</h3>
+            </a>
+            <p>Цена: {{ car.price }} руб.</p>
+            <p>Лошадиные силы: {{ car.power }}</p>
+            <p>Пробег: {{ car.mileage }} км</p>
+            <p>Коробка: {{ car.get_transmission_display }}</p>
+            <form action="{% url 'add_to_cart' car.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit">В корзину</button>
+            </form>
+        </div>
+    {% empty %}
+        <p>Автомобили отсутствуют.</p>
+    {% endfor %}
+</div>
+{% endblock %}

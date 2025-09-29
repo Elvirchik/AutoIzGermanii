@@ -1,33 +1,218 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import user_passes_test, login_required
+from django.views.decorators.http import require_http_methods
+from django.contrib import messages
+from .models import User, Car, Order
+from .forms import UserForm, CarForm, OrderForm, RegisterForm
+from .forms import PhoneAuthForm
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from .forms import CustomUserCreationForm
-from .models import Role
+from .models import CartItem
+from .models import OrderItem
 
 
-def index(request):
-    return render(request, 'index.html')
+def home(request):
+    return render(request, 'main/home.html')
 
-def login_view(request):
+
+def register(request):
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.get_user()
+            user = form.save()
             login(request, user)
-            return redirect('index')
+            return redirect('home')
     else:
-        form = AuthenticationForm()
-    return render(request, 'login.html', {'form': form})
+        form = RegisterForm()
+    return render(request, 'main/register.html', {'form': form})
 
-def register_view(request):
+def user_login(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
+        form = PhoneAuthForm(request, data=request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.role = Role.objects.get(name='USER')
+            phone = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, phone=phone, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('home')
+            else:
+                messages.error(request, 'Неверный номер телефона или пароль')
+    else:
+        form = PhoneAuthForm()
+    return render(request, 'main/login.html', {'form': form})
+
+def user_logout(request):
+    logout(request)
+    return redirect('home')
+
+def catalog(request):
+    cars = Car.objects.all()
+    return render(request, 'main/catalog.html', {'cars': cars})
+
+def car_detail(request, car_id):
+    car = get_object_or_404(Car, id=car_id)
+    return render(request, 'main/car_detail.html', {'car': car})
+
+@login_required
+def add_to_cart(request, car_id):
+    car = get_object_or_404(Car, id=car_id)
+    cart_item, created = CartItem.objects.get_or_create(user=request.user, car=car)
+    if not created:
+        cart_item.quantity += 1
+        cart_item.save()
+    return redirect('cart')
+
+@login_required
+def cart(request):
+    items = CartItem.objects.filter(user=request.user)
+    total_price = sum(item.car.price * item.quantity for item in items)
+    return render(request, 'main/cart.html', {'items': items, 'total_price': total_price})
+
+@login_required
+def place_order(request):
+    user = request.user
+    if not user.address:
+        messages.error(request, 'Пожалуйста, добавьте адрес доставки в профиле.')
+        return redirect('profile')
+    items = CartItem.objects.filter(user=user)
+    if not items.exists():
+        messages.error(request, 'Ваша корзина пуста.')
+        return redirect('catalog')
+    order = Order.objects.create(user=user, address=user.address)
+    for item in items:
+        OrderItem.objects.create(order=order, car=item.car, quantity=item.quantity)
+    items.delete()
+    messages.success(request, 'Заказ успешно создан.')
+    return redirect('profile')
+
+@login_required
+def profile(request):
+    user = request.user
+    if request.method == 'POST':
+        address = request.POST.get('address')
+        if address:
+            user.address = address
             user.save()
-            login(request, user)
-            return redirect('index')
+            messages.success(request, 'Адрес обновлен')
+        return redirect('profile')
+    orders = user.orders.all()
+    return render(request, 'main/profile.html', {'user': user, 'orders': orders})
+
+def admin_check(user):
+    return user.is_superuser
+
+@user_passes_test(admin_check)
+def admin_page(request):
+    users = User.objects.all()
+    cars = Car.objects.all()
+    orders = Order.objects.all()
+    return render(request, 'main/admin_page.html', {
+        'users': users,
+        'cars': cars,
+        'orders': orders,
+    })
+
+# Дополнительно можно добавить представления для управления пользователями, автомобилями и заказами в отдельном виде с формами.
+from django.views.decorators.http import require_POST
+
+@user_passes_test(admin_check)
+@require_POST
+def change_order_status(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    status = request.POST.get('status')
+    if status in dict(Order.STATUS_CHOICES):
+        order.status = status
+        order.save()
+    return redirect('admin_page')
+
+@user_passes_test(lambda u: u.is_superuser)
+def admin_page(request):
+    users = User.objects.all()
+    cars = Car.objects.all()
+    orders = Order.objects.all()
+    return render(request, 'main/admin_page.html', {
+        'users': users,
+        'cars': cars,
+        'orders': orders,
+    })
+
+# Пользователи
+@user_passes_test(lambda u: u.is_superuser)
+def user_edit(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        form = UserForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Пользователь обновлен")
+            return redirect('admin_page')
     else:
-        form = CustomUserCreationForm()
-    return render(request, 'register.html', {'form': form})
+        form = UserForm(instance=user)
+    return render(request, 'main/admin_user_form.html', {'form': form})
+
+@user_passes_test(lambda u: u.is_superuser)
+def user_delete(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        user.delete()
+        messages.success(request, "Пользователь удален")
+        return redirect('admin_page')
+    return render(request, 'main/admin_confirm_delete.html', {'object': user, 'type': 'пользователь'})
+
+# Автомобили
+@user_passes_test(lambda u: u.is_superuser)
+def car_add(request):
+    if request.method == 'POST':
+        form = CarForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Автомобиль добавлен")
+            return redirect('admin_page')
+    else:
+        form = CarForm()
+    return render(request, 'main/admin_car_form.html', {'form': form})
+
+@user_passes_test(lambda u: u.is_superuser)
+def car_edit(request, car_id):
+    car = get_object_or_404(Car, id=car_id)
+    if request.method == 'POST':
+        form = CarForm(request.POST, request.FILES, instance=car)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Автомобиль обновлен")
+            return redirect('admin_page')
+    else:
+        form = CarForm(instance=car)
+    return render(request, 'main/admin_car_form.html', {'form': form})
+
+@user_passes_test(lambda u: u.is_superuser)
+def car_delete(request, car_id):
+    car = get_object_or_404(Car, id=car_id)
+    if request.method == 'POST':
+        car.delete()
+        messages.success(request, "Автомобиль удален")
+        return redirect('admin_page')
+    return render(request, 'main/admin_confirm_delete.html', {'object': car, 'type': 'автомобиль'})
+
+# Заказы
+@user_passes_test(lambda u: u.is_superuser)
+def order_edit(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    if request.method == 'POST':
+        form = OrderForm(request.POST, instance=order)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Заказ обновлен")
+            return redirect('admin_page')
+    else:
+        form = OrderForm(instance=order)
+    return render(request, 'main/admin_order_form.html', {'form': form})
+
+@user_passes_test(lambda u: u.is_superuser)
+def order_delete(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    if request.method == 'POST':
+        order.delete()
+        messages.success(request, "Заказ удален")
+        return redirect('admin_page')
+    return render(request, 'main/admin_confirm_delete.html', {'object': order, 'type': 'заказ'})
