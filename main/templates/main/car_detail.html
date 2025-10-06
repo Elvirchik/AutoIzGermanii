@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-11">
+    <div class="col-12 col-md-11 col-lg-11">
 
         <h2 class="display-4 fw-bold mb-4 text-dark text-center text-lg-start">{{ car.configuration }}</h2>
         <hr class="mb-4">
@@ -30,7 +30,7 @@
 
                         <div class="mb-4 text-center p-3 bg-light rounded border border-warning">
                             <p class="text-secondary mb-1 fw-bold">Цена:</p>
-                            <span class="display-3 fw-bolder text-danger">{{ car.price|floatformat:0 }} руб.</span>
+                            <span class="display-5 display-md-3 fw-bolder text-danger">{{ car.price|floatformat:0 }} руб.</span>
                         </div>
 
                         <h5 class="fw-bold mb-3 text-primary">Ключевые характеристики</h5>

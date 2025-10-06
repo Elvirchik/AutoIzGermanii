@@ -31,9 +31,13 @@
                         <td>{{ u.last_name }}</td>
                         <td>{{ u.phone }}</td>
                         <td>{{ u.address|truncatechars:50|default:'Не указан' }}</td>
-                        <td class="text-center">
-                            <a href="{% url 'admin_user_edit' u.id %}" class="btn btn-sm btn-outline-primary me-2">Редактировать</a>
-                            <a href="{% url 'admin_user_delete' u.id %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                        <td class="text-center text-nowrap">
+                            <a href="{% url 'admin_user_edit' u.id %}" class="btn btn-sm btn-outline-primary me-2" title="Редактировать">
+                                <i class="bi bi-pencil"></i> <span class="d-none d-sm-inline">Редактировать</span>
+                            </a>
+                            <a href="{% url 'admin_user_delete' u.id %}" class="btn btn-sm btn-outline-danger" title="Удалить">
+                                <i class="bi bi-trash"></i> <span class="d-none d-sm-inline">Удалить</span>
+                            </a>
                         </td>
                     </tr>
                     {% empty %}
@@ -76,11 +80,14 @@
                                 <span class="badge bg-success">Активен</span>
                             {% endif %}
                         </td>
-                        <td class="text-center">
-                            <a href="{% url 'admin_car_edit' c.id %}" class="btn btn-sm btn-outline-primary me-2">Редактировать</a>
+                        <td class="text-center text-nowrap">
+                            <a href="{% url 'admin_car_edit' c.id %}" class="btn btn-sm btn-outline-primary me-2" title="Редактировать">
+                                <i class="bi bi-pencil"></i> <span class="d-none d-sm-inline">Редактировать</span>
+                            </a>
                             <a href="{% url 'admin_car_delete' c.id %}"
-                               class="btn btn-sm btn-outline-{% if c.is_deleted %}success{% else %}danger{% endif %}">
-                                {% if c.is_deleted %}Восстановить{% else %}Удалить{% endif %}
+                               class="btn btn-sm btn-outline-{% if c.is_deleted %}success{% else %}danger{% endif %}"
+                               title="{% if c.is_deleted %}Восстановить{% else %}Удалить{% endif %}">
+                                <i class="bi bi-{% if c.is_deleted %}arrow-repeat{% else %}x-lg{% endif %}"></i> <span class="d-none d-sm-inline">{% if c.is_deleted %}Восстановить{% else %}Удалить{% endif %}</span>
                             </a>
                         </td>
                     </tr>
@@ -132,7 +139,7 @@
                             {% endfor %}
                             </ul>
                         </td>
-                        <td style="min-width: 180px;">
+                        <td style="min-width: 150px;">
                             <form method="post" action="{% url 'change_order_status' order.id %}" class="d-flex">
                                 {% csrf_token %}
                                 <select name="status" class="form-select form-select-sm me-2">
@@ -140,12 +147,18 @@
                                     <option value="{{ key }}" {% if order.status == key %}selected{% endif %}>{{ label }}</option>
                                     {% endfor %}
                                 </select>
-                                <button type="submit" class="btn btn-sm btn-success">Сохранить</button>
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="bi bi-check-lg"></i> <span class="d-none d-sm-inline">Сохранить</span>
+                                </button>
                             </form>
                         </td>
-                        <td class="text-center">
-                            <a href="{% url 'admin_order_edit' order.id %}" class="btn btn-sm btn-outline-primary me-2">Редактировать</a>
-                            <a href="{% url 'admin_order_delete' order.id %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                        <td class="text-center text-nowrap">
+                            <a href="{% url 'admin_order_edit' order.id %}" class="btn btn-sm btn-outline-primary me-2" title="Редактировать">
+                                <i class="bi bi-pencil"></i> <span class="d-none d-sm-inline">Редактировать</span>
+                            </a>
+                            <a href="{% url 'admin_order_delete' order.id %}" class="btn btn-sm btn-outline-danger" title="Удалить">
+                                <i class="bi bi-trash"></i> <span class="d-none d-sm-inline">Удалить</span>
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}

@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-12 col-md-10 col-lg-8">
         <h2 class="display-4 fw-bold text-center mb-4">Ваша Корзина</h2>
 
         {% if items %}
@@ -15,46 +15,55 @@
 
                 <ul class="list-group list-group-flush">
                     {% for item in items %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                        <li class="list-group-item p-3">
+                            <div class="row align-items-center g-2">
 
-                            <div style="flex-basis: 40%;">
-                                <h5 class="mb-0">
-                                    <a href="{% url 'car_detail' item.car.id %}" class="text-decoration-none text-dark">
-                                        {{ item.car.configuration }}
-                                    </a>
-                                </h5>
-                            </div>
+                                <div class="col-12 col-md-6">
+                                    <h5 class="mb-0">
+                                        <a href="{% url 'car_detail' item.car.id %}" class="text-decoration-none text-dark">
+                                            {{ item.car.configuration }}
+                                        </a>
+                                    </h5>
+                                    <span class="fs-6 text-success fw-bold d-block d-md-none mt-1">
+                                        {{ item.car.price|floatformat:0 }} руб.
+                                    </span>
+                                </div>
 
-                            <div class="d-flex align-items-center" style="flex-basis: 30%;">
-                                <form action="{% url 'update_cart_quantity' item.id 'remove' %}" method="post" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-outline-secondary btn-sm rounded-circle me-2" style="width: 32px; height: 32px; padding: 0;">
-                                        <i class="bi bi-dash"></i>
-                                    </button>
-                                </form>
+                                <div class="col-12 col-md-6 d-flex justify-content-between align-items-center pt-2 pt-md-0">
 
-                                <span class="fw-bold fs-5 mx-2">{{ item.quantity }}</span>
+                                    <div class="d-flex align-items-center mx-auto mx-md-0">
+                                        <form action="{% url 'update_cart_quantity' item.id 'remove' %}" method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-secondary btn-sm rounded-circle" style="width: 32px; height: 32px; padding: 0;">
+                                                <i class="bi bi-dash"></i>
+                                            </button>
+                                        </form>
 
-                                <form action="{% url 'update_cart_quantity' item.id 'add' %}" method="post" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-outline-secondary btn-sm rounded-circle ms-2" style="width: 32px; height: 32px; padding: 0;">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </form>
-                            </div>
+                                        <span class="fw-bold fs-5 mx-2">{{ item.quantity }}</span>
 
-                            <div class="d-flex align-items-center justify-content-end" style="flex-basis: 30%;">
-                                <span class="fs-5 text-success fw-bold me-3">
-                                    {{ item.car.price|floatformat:0 }} руб.
-                                </span>
+                                        <form action="{% url 'update_cart_quantity' item.id 'add' %}" method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-secondary btn-sm rounded-circle" style="width: 32px; height: 32px; padding: 0;">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                        </form>
+                                    </div>
 
-                                <form action="{% url 'update_cart_quantity' item.id 'delete' %}" method="post" class="m-0">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-outline-danger btn-sm"
-                                            title="Удалить весь товар из корзины">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                    <div class="d-flex align-items-center">
+                                        <span class="fs-5 text-success fw-bold me-3 d-none d-md-block">
+                                            {{ item.car.price|floatformat:0 }} руб.
+                                        </span>
+
+                                        <form action="{% url 'update_cart_quantity' item.id 'delete' %}" method="post" class="m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Удалить товар">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                </div>
+
                             </div>
                         </li>
                     {% endfor %}
