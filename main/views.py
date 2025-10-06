@@ -8,7 +8,7 @@ from .forms import PhoneAuthForm
 from django.contrib.auth import authenticate, login, logout
 from .models import CartItem
 from .models import OrderItem
-from django.views.decorators.http import require_POST  # Убедимся, что импорт на месте
+from django.views.decorators.http import require_POST
 
 
 def home(request):
@@ -50,20 +50,17 @@ def user_logout(request):
 
 
 def catalog(request):
-    # Теперь Car.objects.all() автоматически исключает удаленные авто
     cars = Car.objects.all()
     return render(request, 'main/catalog.html', {'cars': cars})
 
 
 def car_detail(request, car_id):
-    # Используем Car.objects.all() - он автоматически проверит is_deleted=False
     car = get_object_or_404(Car, id=car_id)
     return render(request, 'main/car_detail.html', {'car': car})
 
 
 @login_required
 def add_to_cart(request, car_id):
-    # Убедимся, что добавляемый в корзину автомобиль не удален
     car = get_object_or_404(Car, id=car_id)
     if car.is_deleted:
         messages.error(request, 'Этот автомобиль больше не доступен.')
@@ -79,7 +76,6 @@ def add_to_cart(request, car_id):
 @login_required
 def cart(request):
     items = CartItem.objects.filter(user=request.user)
-    # При расчете общей цены удаленные авто будут иметь цену, но пользователь их видит, пока не очистит корзину.
     total_price = sum(item.car.price * item.quantity for item in items)
     return render(request, 'main/cart.html', {'items': items, 'total_price': total_price})
 
@@ -94,9 +90,6 @@ def place_order(request):
     if not items.exists():
         messages.error(request, 'Ваша корзина пуста.')
         return redirect('catalog')
-
-    # Можно добавить проверку, что все авто в корзине не удалены, но Django
-    # по умолчанию позволит создать заказ, даже если авто удалено после добавления в корзину.
 
     order = Order.objects.create(user=user, address=user.address)
     for item in items:
@@ -127,7 +120,6 @@ def admin_check(user):
 @user_passes_test(admin_check)
 def admin_page(request):
     users = User.objects.all()
-    # Используем all_objects, чтобы видеть все авто, включая "удаленные"
     cars = Car.all_objects.all()
     orders = Order.objects.all()
     return render(request, 'main/admin_page.html', {
@@ -148,7 +140,6 @@ def change_order_status(request, order_id):
     return redirect('admin_page')
 
 
-# Пользователи (код без изменений)
 @user_passes_test(lambda u: u.is_superuser)
 def user_edit(request, user_id):
     user = get_object_or_404(User, id=user_id)
@@ -173,7 +164,6 @@ def user_delete(request, user_id):
     return render(request, 'main/admin_confirm_delete.html', {'object': user, 'type': 'пользователь'})
 
 
-# Автомобили (код без изменений)
 @user_passes_test(lambda u: u.is_superuser)
 def car_add(request):
     if request.method == 'POST':
@@ -189,7 +179,6 @@ def car_add(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def car_edit(request, car_id):
-    # Используем all_objects, чтобы можно было редактировать даже "удаленный" автомобиль
     car = get_object_or_404(Car.all_objects, id=car_id)
     if request.method == 'POST':
         form = CarForm(request.POST, request.FILES, instance=car)
@@ -204,12 +193,10 @@ def car_edit(request, car_id):
 
 @user_passes_test(lambda u: u.is_superuser)
 def car_delete(request, car_id):
-    # Изменена логика: вместо delete() устанавливаем is_deleted=True
     car = get_object_or_404(Car.all_objects,
-                            id=car_id)  # Используем all_objects, чтобы найти авто, даже если оно уже удалено
+                            id=car_id)
     if request.method == 'POST':
         if car.is_deleted:
-            # Если уже удален, то можно восстановить (по желанию, тут просто удалим)
             car.is_deleted = False
             car.save()
             messages.success(request, f"Автомобиль '{car.configuration}' восстановлен.")
@@ -219,12 +206,10 @@ def car_delete(request, car_id):
             messages.success(request, f"Автомобиль '{car.configuration}' помечен как удаленный.")
         return redirect('admin_page')
 
-    # Изменяем текст, который видит пользователь в форме подтверждения
     action = "удалить" if not car.is_deleted else "восстановить"
     return render(request, 'main/admin_confirm_delete.html', {'object': car, 'type': 'автомобиль', 'action': action})
 
 
-# Заказы (код без изменений)
 @user_passes_test(lambda u: u.is_superuser)
 def order_edit(request, order_id):
     order = get_object_or_404(Order, id=order_id)

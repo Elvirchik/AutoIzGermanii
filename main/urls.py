@@ -16,7 +16,6 @@ urlpatterns = [
     path('admin_page/', views.admin_page, name='admin_page'),
     path('change_order_status/<int:order_id>/', views.change_order_status, name='change_order_status'),
 
-    # Кастомные CRUD для админки с префиксом manage
     path('manage/user/edit/<int:user_id>/', views.user_edit, name='admin_user_edit'),
     path('manage/user/delete/<int:user_id>/', views.user_delete, name='admin_user_delete'),
 

@@ -2,17 +2,14 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
 
-# Менеджер для soft delete: по умолчанию показывает только неудаленные объекты
 class ActiveCarManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)
 
 
-# Ваш UserManager остается без изменений
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
-    # ... (Остальной код UserManager остается прежним)
     def _create_user(self, phone, password, **extra_fields):
         if not phone:
             raise ValueError('The given phone must be set')
@@ -54,7 +51,6 @@ class User(AbstractUser):
         return f"{self.first_name} {self.last_name} ({self.phone})"
 
 
-# Автомобиль
 class Car(models.Model):
     TRANSMISSION_CHOICES = [
         ('auto', 'Автомат'),
@@ -75,7 +71,6 @@ class Car(models.Model):
         ('full', 'Полный'),
     ]
 
-    # ДОБАВЛЕНО ПОЛЕ ДЛЯ SOFT DELETE
     is_deleted = models.BooleanField(default=False)
 
     photo = models.ImageField("Фото", upload_to='cars/')
@@ -89,15 +84,13 @@ class Car(models.Model):
     configuration = models.CharField("Название", max_length=100)
     configuration_desc = models.TextField("Описание", blank=True)
 
-    # Менеджеры:
-    objects = ActiveCarManager()  # Основной менеджер (показывает только неудаленные)
-    all_objects = models.Manager()  # Менеджер для доступа ко всем объектам (для админки)
+    objects = ActiveCarManager()
+    all_objects = models.Manager()
 
     def __str__(self):
         return f"{self.configuration} - {self.price} руб."
 
 
-# Корзина с количеством машин (Связь пользователя и автомобиля)
 class CartItem(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cart_items')
     car = models.ForeignKey(Car, on_delete=models.CASCADE)
@@ -107,7 +100,6 @@ class CartItem(models.Model):
         unique_together = ('user', 'car')
 
 
-# Заказ автомобиля
 class Order(models.Model):
     STATUS_CHOICES = [
         ('created', 'Создан'),
@@ -127,7 +119,6 @@ class Order(models.Model):
         return f"Заказ {self.id} - {self.user.first_name} {self.user.last_name}"
 
 
-# Позиции с количеством в заказе
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     car = models.ForeignKey(Car, on_delete=models.CASCADE)
