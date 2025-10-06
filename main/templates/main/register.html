@@ -83,7 +83,6 @@
 
         toggleButtons.forEach(button => {
             button.addEventListener('click', function (e) {
-                // 1. Получаем ID целевого поля из data-атрибута
                 const targetId = this.dataset.target;
                 const passwordField = document.getElementById(targetId);
                 const icon = this.querySelector('i');
@@ -91,10 +90,8 @@
                 if (passwordField) {
                     const isPassword = passwordField.type === 'password';
 
-                    // 2. Переключение типа поля
                     passwordField.type = isPassword ? 'text' : 'password';
 
-                    // 3. Переключение иконки
                     icon.classList.toggle('bi-eye');
                     icon.classList.toggle('bi-eye-slash');
                 }

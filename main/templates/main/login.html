@@ -77,10 +77,8 @@
                 const icon = this.querySelector('i');
                 const isPassword = passwordField.type === 'password';
 
-                // 1. Переключение типа поля
                 passwordField.type = isPassword ? 'text' : 'password';
 
-                // 2. Переключение иконки
                 icon.classList.toggle('bi-eye');
                 icon.classList.toggle('bi-eye-slash');
             });
