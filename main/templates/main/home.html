@@ -3,10 +3,44 @@
 {% block title %}Главная{% endblock %}
 
 {% block content %}
-<h1>Добро пожаловать на AutoGerm</h1>
-<div>
-    Админка:
-    +79173900606 <br>
-    пароль-admin
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+
+        <div class="text-center mb-5 p-4 rounded-3 bg-white shadow">
+            <h1 class="display-3 fw-bolder mb-3 text-dark">Добро пожаловать на <span class="text-warning">AutoGerm</span></h1>
+            <p class="lead mb-4 text-secondary">
+                Ваш надежный сервис по заказу автомобилей из <strong class="text-primary">Германии</strong> прямо к вам домой.
+                Мы подберем, проверим и доставим машину вашей мечты!
+            </p>
+            <img src="../../../static/images/home_car.jpg" alt="Автомобиль из Германии"
+                 class="img-fluid rounded-3 shadow-lg border border-4 border-light"
+                 style="max-height: 500px; object-fit: cover; width: 100%;">
+
+            <div class="mt-4">
+                 <a href="{% url 'catalog' %}" class="btn btn-warning btn-lg fw-bold shadow-sm me-3">
+                    Посмотреть каталог
+                 </a>
+            </div>
+        </div>
+
+        <hr class="my-5">
+
+        <div class="card border-warning shadow-lg mx-auto mb-5" style="max-width: 500px;">
+            <div class="card-header bg-warning text-dark text-center fw-bold">
+                Вход в Администратора
+            </div>
+            <div class="card-body">
+                <p class="text-center mb-1">
+                    <strong class="text-dark">Телефон:</strong>
+                    <a href="tel:+79173900606" class="text-decoration-none">+7 917 390-06-06</a>
+                </p>
+                <p class="text-center mb-1">
+                    <strong class="text-dark">Пароль:</strong>
+                    <strong class="text-danger">admin</strong>
+                </p>
+            </div>
+        </div>
+
+    </div>
 </div>
 {% endblock %}

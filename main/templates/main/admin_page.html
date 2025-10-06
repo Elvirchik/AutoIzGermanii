@@ -1,86 +1,157 @@
 {% extends 'main/base.html' %}
-{% block title %}Админка{% endblock %}
+
+{% block title %}Администрирование сайта{% endblock %}
+
 {% block content %}
-<h2>Администрирование</h2>
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="display-4 fw-bold text-center text-dark">Панель Администратора</h2>
+        <p class="lead text-center text-secondary">Управление пользователями, каталогом и заказами.</p>
+        <hr class="my-4">
+    </div>
+</div>
 
-<h3>Пользователи</h3>
-<table border="1">
-    <tr>
-        <th>ID</th><th>Имя</th><th>Фамилия</th><th>Отчество</th><th>Телефон</th><th>Адрес</th><th>Действия</th>
-    </tr>
-    {% for u in users %}
-    <tr>
-        <td>{{ u.id }}</td>
-        <td>{{ u.first_name }}</td>
-        <td>{{ u.last_name }}</td>
-        <td>{{ u.middle_name }}</td>
-        <td>{{ u.phone }}</td>
-        <td>{{ u.address }}</td>
-        <td>
-            <a href="{% url 'admin_user_edit' u.id %}">Редактировать</a> |
-            <a href="{% url 'admin_user_delete' u.id %}">Удалить</a>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
-
-<h3>Каталог авто</h3>
-<a href="{% url 'admin_car_add' %}">Добавить автомобиль</a>
-<table border="1">
-    <tr>
-        <th>ID</th><th>Название</th><th>Цена</th><th>Л.С.</th><th>Пробег</th><th>Коробка</th><th>Действия</th>
-    </tr>
-    {% for c in cars %}
-    <tr>
-        <td>{{ c.id }}</td>
-        <td>{{ c.configuration }}</td>
-        <td>{{ c.price }}</td>
-        <td>{{ c.power }}</td>
-        <td>{{ c.mileage }}</td>
-        <td>{{ c.get_transmission_display }}</td>
-        <td>
-            <a href="{% url 'admin_car_edit' c.id %}">Редактировать</a> |
-            <a href="{% url 'admin_car_delete' c.id %}">Удалить</a>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
-
-<h3>Заказы</h3>
-<table border="1">
-    <tr>
-        <th>ID</th><th>Пользователь</th><th>Телефон</th><th>Адрес</th><th>Статус</th><th>Автомобили</th><th>Изменить статус</th><th>Действия</th>
-    </tr>
-    {% for order in orders %}
-    <tr>
-        <td>{{ order.id }}</td>
-        <td>{{ order.user.first_name }} {{ order.user.last_name }} {{ order.user.middle_name }}</td>
-        <td>{{ order.user.phone }}</td>
-        <td>{{ order.address }}</td>
-        <td>{{ order.get_status_display }}</td>
-        <td>
-            <ul>
-            {% for item in order.items.all %}
-                <li>{{ item.car.configuration }} - {{ item.quantity }}</li>
-            {% endfor %}
-            </ul>
-        </td>
-        <td>
-            <form method="post" action="{% url 'change_order_status' order.id %}">
-                {% csrf_token %}
-                <select name="status">
-                    {% for key, label in order.STATUS_CHOICES %}
-                    <option value="{{ key }}" {% if order.status == key %}selected{% endif %}>{{ label }}</option>
+<div class="card shadow mb-5">
+    <div class="card-header bg-primary text-white h4 fw-bold">
+        <i class="bi bi-people-fill me-2"></i> Пользователи
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th><th>Имя</th><th>Фамилия</th><th>Телефон</th><th>Адрес</th><th class="text-center">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>{{ u.id }}</td>
+                        <td>{{ u.first_name }}</td>
+                        <td>{{ u.last_name }}</td>
+                        <td>{{ u.phone }}</td>
+                        <td>{{ u.address|truncatechars:50|default:'Не указан' }}</td>
+                        <td class="text-center">
+                            <a href="{% url 'admin_user_edit' u.id %}" class="btn btn-sm btn-outline-primary me-2">Редактировать</a>
+                            <a href="{% url 'admin_user_delete' u.id %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted">Пользователи отсутствуют.</td></tr>
                     {% endfor %}
-                </select>
-                <button type="submit">Сохранить</button>
-            </form>
-        </td>
-        <td>
-            <a href="{% url 'admin_order_edit' order.id %}">Редактировать</a> |
-            <a href="{% url 'admin_order_delete' order.id %}">Удалить</a>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mb-5">
+    <div class="card-header bg-warning text-dark h4 fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-car-front-fill me-2"></i> Каталог Автомобилей</span>
+        <a href="{% url 'admin_car_add' %}" class="btn btn-dark btn-sm fw-bold">
+            <i class="bi bi-plus-lg"></i> Добавить автомобиль
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-sm">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>ID</th><th>Название</th><th>Цена (руб)</th><th>Л.С.</th><th>Пробег (км)</th><th>Коробка</th><th>Статус</th><th class="text-center">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in cars %}
+                    <tr>
+                        <td>{{ c.id }}</td>
+                        <td>{{ c.configuration|truncatechars:30 }}</td>
+                        <td class="fw-bold text-danger">{{ c.price|floatformat:0 }}</td>
+                        <td>{{ c.power }}</td>
+                        <td>{{ c.mileage|floatformat:0 }}</td>
+                        <td><span class="badge bg-dark">{{ c.get_transmission_display }}</span></td>
+                        <td>
+                            {% if c.is_deleted %}
+                                <span class="badge bg-danger">Удален</span>
+                            {% else %}
+                                <span class="badge bg-success">Активен</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'admin_car_edit' c.id %}" class="btn btn-sm btn-outline-primary me-2">Редактировать</a>
+                            <a href="{% url 'admin_car_delete' c.id %}"
+                               class="btn btn-sm btn-outline-{% if c.is_deleted %}success{% else %}danger{% endif %}">
+                                {% if c.is_deleted %}Восстановить{% else %}Удалить{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center text-muted">Автомобили в каталоге отсутствуют.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mb-5">
+    <div class="card-header bg-success text-white h4 fw-bold">
+        <i class="bi bi-receipt-cutoff me-2"></i> Заказы
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th><th>Пользователь</th><th>Телефон</th><th>Адрес</th><th>Статус</th><th>Состав заказа</th><th>Изменить статус</th><th class="text-center">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ order.id }}</td>
+                        <td>{{ order.user.first_name }} {{ order.user.last_name }}</td>
+                        <td>{{ order.user.phone }}</td>
+                        <td>{{ order.address|truncatechars:30 }}</td>
+                        <td>
+                            {% if order.status == 'new' %}
+                                <span class="badge bg-info text-dark">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'processing' %}
+                                <span class="badge bg-warning text-dark">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'shipped' %}
+                                <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'delivered' %}
+                                <span class="badge bg-success">{{ order.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <ul class="list-unstyled mb-0 small">
+                            {% for item in order.items.all %}
+                                <li>— {{ item.car.configuration|truncatechars:20 }} (x{{ item.quantity }})</li>
+                            {% endfor %}
+                            </ul>
+                        </td>
+                        <td style="min-width: 180px;">
+                            <form method="post" action="{% url 'change_order_status' order.id %}" class="d-flex">
+                                {% csrf_token %}
+                                <select name="status" class="form-select form-select-sm me-2">
+                                    {% for key, label in order.STATUS_CHOICES %}
+                                    <option value="{{ key }}" {% if order.status == key %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-success">Сохранить</button>
+                            </form>
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'admin_order_edit' order.id %}" class="btn btn-sm btn-outline-primary me-2">Редактировать</a>
+                            <a href="{% url 'admin_order_delete' order.id %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}

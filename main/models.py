@@ -1,9 +1,18 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
+
+# Менеджер для soft delete: по умолчанию показывает только неудаленные объекты
+class ActiveCarManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
+# Ваш UserManager остается без изменений
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
+    # ... (Остальной код UserManager остается прежним)
     def _create_user(self, phone, password, **extra_fields):
         if not phone:
             raise ValueError('The given phone must be set')
@@ -66,6 +75,9 @@ class Car(models.Model):
         ('full', 'Полный'),
     ]
 
+    # ДОБАВЛЕНО ПОЛЕ ДЛЯ SOFT DELETE
+    is_deleted = models.BooleanField(default=False)
+
     photo = models.ImageField("Фото", upload_to='cars/')
     price = models.DecimalField("Стоимость", max_digits=10, decimal_places=2)
     power = models.PositiveIntegerField("Лошадиные силы")
@@ -76,6 +88,10 @@ class Car(models.Model):
     fuel_type = models.CharField("Тип топлива", max_length=10, choices=FUEL_CHOICES)
     configuration = models.CharField("Название", max_length=100)
     configuration_desc = models.TextField("Описание", blank=True)
+
+    # Менеджеры:
+    objects = ActiveCarManager()  # Основной менеджер (показывает только неудаленные)
+    all_objects = models.Manager()  # Менеджер для доступа ко всем объектам (для админки)
 
     def __str__(self):
         return f"{self.configuration} - {self.price} руб."

@@ -1,32 +1,91 @@
 {% extends 'main/base.html' %}
-{% block title %}Профиль{% endblock %}
-{% block content %}
-<h2>Профиль</h2>
-<form method="post">{% csrf_token %}
-    <p>Имя: {{ user.first_name }}</p>
-    <p>Фамилия: {{ user.last_name }}</p>
-    <p>Отчество: {{ user.middle_name }}</p>
-    <p>Телефон: {{ user.phone }}</p>
-    <p>Email: {{ user.email }}</p>
-    <p>
-        Адрес доставки:<br>
-        <textarea name="address" rows="4" cols="40">{{ user.address }}</textarea>
-    </p>
-    <button type="submit">Сохранить адрес</button>
-</form>
 
-<h3>Заказы</h3>
-<ul>
-    {% for order in orders %}
-    <li>Заказ №{{ order.id }} - Статус: {{ order.get_status_display }} - Дата: {{ order.created_at }}
-        <ul>
-            {% for item in order.items.all %}
-                <li>{{ item.car.configuration }} - Кол-во: {{ item.quantity }}</li>
-            {% endfor %}
-        </ul>
-    </li>
-    {% empty %}
-    <li>Заказы отсутствуют</li>
-    {% endfor %}
-</ul>
+{% block title %}Личный Профиль{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <h2 class="display-4 fw-bold text-center mb-5 text-dark">Личный Профиль</h2>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-primary text-white h5">
+                        Ваши данные
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>Имя:</strong> <span>{{ user.first_name|default:'Не указано' }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>Фамилия:</strong> <span>{{ user.last_name|default:'Не указано' }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>Отчество:</strong> <span>{{ user.middle_name|default:'Не указано' }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>Телефон:</strong> <span>{{ user.phone|default:'Не указано' }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>Email:</strong> <span>{{ user.email|default:'Не указано' }}</span>
+                            </li>
+                        </ul>
+
+                        <form method="post" class="mt-3">
+                            {% csrf_token %}
+                            <label for="address" class="form-label fw-bold">Адрес доставки:</label>
+                            <textarea name="address" id="address" class="form-control mb-3" rows="4" placeholder="Введите ваш полный адрес доставки">{{ user.address }}</textarea>
+
+                            <button type="submit" class="btn btn-warning w-100 fw-bold shadow-sm">
+                                Сохранить адрес
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-secondary text-white h5">
+                        Ваши Заказы
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            {% for order in orders %}
+                            <li class="list-group-item mb-3 p-3 border rounded shadow-sm">
+                                <h6 class="mb-2">
+                                    Заказ №{{ order.id }}
+
+                                    {% if order.status == 'new' %}
+                                        <span class="badge bg-info text-dark ms-2">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'processing' %}
+                                        <span class="badge bg-warning text-dark ms-2">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'shipped' %}
+                                        <span class="badge bg-primary ms-2">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'delivered' %}
+                                        <span class="badge bg-success ms-2">{{ order.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger ms-2">{{ order.get_status_display }}</span>
+                                    {% endif %}
+                                </h6>
+                                <small class="text-muted d-block mb-2">Дата: {{ order.created_at|date:"d M Y H:i" }}</small>
+
+                                <strong class="d-block mb-1">Состав:</strong>
+                                <ul class="list-unstyled ms-3 small">
+                                    {% for item in order.items.all %}
+                                        <li>— {{ item.car.configuration }} (x{{ item.quantity }})</li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item text-center text-muted">Заказы отсутствуют.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

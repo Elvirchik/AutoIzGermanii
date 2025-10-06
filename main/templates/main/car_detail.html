@@ -1,19 +1,89 @@
 {% extends 'main/base.html' %}
+
 {% block title %}{{ car.configuration }}{% endblock %}
+
 {% block content %}
-<h2>{{ car.configuration }}</h2>
-<img src="{{ car.photo.url }}" alt="Фото" width="400">
-<ul>
-    <li>Цена: {{ car.price }} руб.</li>
-    <li>Лошадиные силы: {{ car.power }}</li>
-    <li>Пробег: {{ car.mileage }} км</li>
-    <li>Коробка: {{ car.get_transmission_display }}</li>
-    <li>Цвет: {{ car.color }}</li>
-    <li>Привод: {{ car.get_drive_display }}</li>
-    <li>Тип топлива: {{ car.get_fuel_type_display }}</li>
-    <li>Описание: {{ car.configuration_desc }}</li>
-</ul>
-<form action="{% url 'add_to_cart' car.id %}" method="post">{% csrf_token %}
-    <button type="submit">Добавить в заказ</button>
-</form>
+<div class="row justify-content-center">
+    <div class="col-lg-11">
+
+        <h2 class="display-4 fw-bold mb-4 text-dark text-center text-lg-start">{{ car.configuration }}</h2>
+        <hr class="mb-4">
+
+        <div class="row g-5">
+
+            <div class="col-lg-7">
+                <div class="shadow-lg rounded-3 overflow-hidden">
+                    <img src="{{ car.photo.url }}" alt="{{ car.configuration }}"
+                         class="img-fluid w-100"
+                         style="max-height: 500px; object-fit: cover;">
+                </div>
+
+                <div class="mt-4 p-3 bg-light rounded shadow-sm">
+                    <h5 class="fw-bold text-secondary">Детальное описание:</h5>
+                    <p class="text-muted">{{ car.configuration_desc|default:"Детальное описание отсутствует." }}</p>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card shadow-lg border-0 h-100">
+                    <div class="card-body d-flex flex-column">
+
+                        <div class="mb-4 text-center p-3 bg-light rounded border border-warning">
+                            <p class="text-secondary mb-1 fw-bold">Цена:</p>
+                            <span class="display-3 fw-bolder text-danger">{{ car.price|floatformat:0 }} руб.</span>
+                        </div>
+
+                        <h5 class="fw-bold mb-3 text-primary">Ключевые характеристики</h5>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Лошадиные силы:
+                                <span class="fw-bold">{{ car.power }} л.с.</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Пробег:
+                                <span class="fw-bold">{{ car.mileage|floatformat:0 }} км</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Коробка:
+                                <span class="badge bg-secondary">{{ car.get_transmission_display }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Цвет:
+                                <span class="fw-bold" style="color: {{ car.color|lower|default:'#333' }};">
+                                    {{ car.color|default:'Уточнить' }}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Привод:
+                                <span class="badge bg-dark">{{ car.get_drive_display }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Тип топлива:
+                                <span class="badge bg-info text-dark">{{ car.get_fuel_type_display }}</span>
+                            </li>
+                        </ul>
+
+                        <div class="mt-auto pt-3 border-top">
+                            {% if user.is_authenticated %}
+                                <form action="{% url 'add_to_cart' car.id %}" method="post">{% csrf_token %}
+                                    <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold shadow-sm">
+                                        <i class="bi bi-cart-plus me-2"></i> Добавить в заказ
+                                    </button>
+                                </form>
+                            {% else %}
+                                <a href="{% url 'login' %}" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">
+                                    <i class="bi bi-person-circle me-2"></i> Войдите, чтобы оформить заказ
+                                </a>
+                                <p class="text-center small text-muted mt-2">
+                                    Нет аккаунта? <a href="{% url 'register' %}" class="fw-bold">Зарегистрироваться</a>
+                                </p>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -1,0 +1,26 @@
+/* styles.css */
+
+/* Добавление иконок Bootstrap (Необходимо добавить в head base.html) */
+/* <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> */
+
+/* Эффект при наведении на карточку */
+.transition-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.transition-card:hover {
+    transform: translateY(-5px); /* Приподнять карточку */
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important; /* Усилить тень */
+}
+
+/* Эффект при наведении на заголовок */
+.hover-warning:hover {
+    color: #ffc107 !important; /* Цвет Bootstrap Warning */
+}
+
+/* Убрать лишние стили у списка характеристик */
+.list-group-flush .list-group-item {
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+}

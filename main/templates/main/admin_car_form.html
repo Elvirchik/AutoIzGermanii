@@ -1,11 +1,80 @@
 {% extends 'main/base.html' %}
-{% block title %}Форма редактирования{% endblock %}
+
+{% block title %}Форма Редактирования{% endblock %}
+
 {% block content %}
-<h2>Редактирование</h2>
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Сохранить</button>
-    <a href="{% url 'admin_page' %}">Отмена</a>
-</form>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <h2 class="display-5 fw-bold text-center mb-4 text-dark">Редактирование</h2>
+        <hr>
+
+        <div class="card shadow-lg p-4">
+            <div class="card-body">
+
+                <h4 class="card-title text-primary mb-4">Детали объекта</h4>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
+
+                        {% if field.field.widget.input_type == 'checkbox' %}
+                            <div class="form-check">
+                                {{ field }}
+                                <label class="form-check-label" for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
+                            </div>
+
+                        {% elif field.field.widget.input_type == 'select' %}
+                            {{ field }}
+
+                        {% elif field.field.widget.input_type == 'textarea' %}
+                            <textarea name="{{ field.name }}" id="{{ field.id_for_label }}"
+                                      rows="4"
+                                      class="form-control {% if field.errors %}is-invalid{% endif %}"
+                                      placeholder="Введите {{ field.label|lower }}">{{ field.value|default_if_none:'' }}</textarea>
+
+                        {% elif field.field.widget.input_type == 'file' %}
+                            <div class="form-control {% if field.errors %}is-invalid{% endif %} p-2">
+                                {{ field.as_widget }}
+                                {% if field.value %}
+                                    <p class="form-text mt-2 mb-0">Текущее: <a href="{{ field.value.url }}" target="_blank">{{ field.value.name|truncatechars:50 }}</a></p>
+                                {% endif %}
+                            </div>
+
+                        {% else %}
+                            <input type="{{ field.field.widget.input_type }}"
+                                   name="{{ field.name }}"
+                                   id="{{ field.id_for_label }}"
+                                   class="form-control {% if field.errors %}is-invalid{% endif %}"
+                                   value="{{ field.value|default_if_none:'' }}"
+                                   placeholder="Введите {{ field.label|lower }}">
+                        {% endif %}
+
+                        {% for error in field.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                        {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    <div class="mt-4 d-flex justify-content-between">
+                        <button type="submit" class="btn btn-success btn-lg fw-bold shadow-sm">
+                            <i class="bi bi-save me-2"></i> Сохранить
+                        </button>
+                        <a href="{% url 'admin_page' %}" class="btn btn-secondary btn-lg fw-bold">
+                            <i class="bi bi-x-lg me-2"></i> Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
